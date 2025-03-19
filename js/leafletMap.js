@@ -69,6 +69,10 @@ class LeafletMap {
     .domain([d3.min(vis.data, d => d.mag), d3.max(vis.data, d => d.mag)])
     .range(["lightblue", "darkblue"]); // Different shades of blue
 
+    // Define time format functions
+    const formatDate = d3.timeFormat("%B %d, %Y");
+    const formatTime = d3.timeFormat("%H:%M:%S");
+
     //these are the city locations, displayed as a set of dots 
     vis.Dots = vis.svg.selectAll('circle')
                     .data(vis.data) 
@@ -89,13 +93,26 @@ class LeafletMap {
                               .attr("fill", "red") //change the fill
                               .attr('r', radiusScale(d.magnitude) + 2); //increase radius on hover
 
+                            // Convert the time string into a Date object and format it
+                            let dateObj = new Date(d.time);
+                            let formattedDate = formatDate(dateObj);
+                            let formattedTime = formatTime(dateObj);
+
                             //create a tool tip
                             d3.select('#tooltip')
                                 .style('opacity', 1)
                                 .style('z-index', 1000000)
                                   // Format number with million and thousand separator
                                   //***** TO DO- change this tooltip to show useful information about the quakes
-                                .html(`<div class="tooltip-label">Magnitude: ${d.magnitude}, Depth: ${d3.format(',')(d.depth)}, Date: ${d.time}</div>`);
+                                  .html(`
+                                    <div class="tooltip-label">
+                                        <strong>Magnitude:</strong> ${d.magnitude} <br>
+                                        <strong>Depth:</strong> ${d3.format(',')(d.depth)} km <br>
+                                        <Strong>Place:</strong> ${d.place} <br>
+                                        <strong>Date:</strong> ${formattedDate} <br>
+                                        <strong>Time:</strong> ${formattedTime} UTC
+                                    </div>
+                                `);
 
                           })
                         .on('mousemove', (event) => {
