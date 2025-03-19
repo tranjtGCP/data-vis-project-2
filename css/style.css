@@ -22,3 +22,14 @@
   font-size: 10px;
   color: #888;
 }
+/* Keep the layers menu always open */
+.leaflet-control-layers-expanded {
+  display: block !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+/* Hide the small toggle button */
+.leaflet-control-layers-toggle {
+  display: none !important;
+}

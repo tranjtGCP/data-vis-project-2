@@ -14,6 +14,7 @@ d3.csv('data/2024-2025.csv')  //**** TO DO  switch this to loading the quakes 'd
       d.magnitude = +d.mag;
       d.time = d.time;
       d.place = d.place;
+      d.duration = +d.dmin;
     });
 
     // Initialize chart and then show it

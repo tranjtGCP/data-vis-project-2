@@ -19,38 +19,63 @@ class LeafletMap {
   initVis() {
     let vis = this;
 
-
-    //ESRI
-    vis.esriUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-    vis.esriAttr = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
-
-    //TOPO
-    vis.topoUrl ='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-    vis.topoAttr = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
-
-    //Thunderforest Outdoors- requires key... so meh... 
-    vis.thOutUrl = 'https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={apikey}';
-    vis.thOutAttr = '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-    //Stamen Terrain
-    vis.stUrl = 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.{ext}';
-    vis.stAttr = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-    //this is the base map layer, where we are showing the map background
-    //**** TO DO - try different backgrounds 
-    vis.base_layer = L.tileLayer(vis.esriUrl, {
-      id: 'esri-image',
-      attribution: vis.esriAttr,
-      ext: 'png'
-    });
+    // Define multiple map backgrounds
+    vis.baseLayers = {
+      "Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+          attribution: "Tiles &copy; Esri",
+      }),
+      "Topographic": L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+          attribution: "Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap",
+      }),
+      "Street Map": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors",
+      })
+  };
 
     vis.theMap = L.map('my-map', {
       center: [0, 0],
       zoom: 1.5,
       minZoom: 1.38,
       worldCopyJump: true,
-      layers: [vis.base_layer]
+      layers: [vis.baseLayers["Satellite"]]
     });
+
+    // Add a control button to toggle backgrounds
+    let layerControl = L.control.layers(vis.baseLayers).addTo(vis.theMap);
+
+    // Function to force the layer selector to stay open
+    function keepLayerControlOpen() {
+      let controlElement = document.querySelector(".leaflet-control-layers");
+      if (controlElement) {
+          controlElement.classList.add("leaflet-control-layers-expanded");
+      }
+    }
+
+    // Ensure the background selection box stays expanded
+    setTimeout(keepLayerControlOpen, 500);
+
+    // Keep the selector open when interacting with the map
+    vis.theMap.on("mouseout", keepLayerControlOpen);
+    vis.theMap.on("zoomstart", keepLayerControlOpen);
+    vis.theMap.on("zoomend", keepLayerControlOpen);
+    vis.theMap.on("movestart", keepLayerControlOpen);
+    vis.theMap.on("moveend", keepLayerControlOpen);
+    vis.theMap.on("baselayerchange", keepLayerControlOpen);
+
+    // Keep menu open when the user hovers over it and moves back to the map
+    let controlElement = document.querySelector(".leaflet-control-layers");
+
+    controlElement.addEventListener("mouseenter", function () {
+        keepLayerControlOpen();
+    });
+
+    controlElement.addEventListener("mouseleave", function () {
+        setTimeout(keepLayerControlOpen, 300); // Delay to ensure it stays open
+    });
+
+    // Initialize the index for cycling through backgrounds
+    vis.currentLayerIndex = 0;
+    vis.layerNames = Object.keys(vis.baseLayers);
 
     //if you stopped here, you would just have a map
 
@@ -158,6 +183,24 @@ class LeafletMap {
       .attr("r", d => radiusScale(d.magnitude) * zoomScaleFactor) ; 
 
   }
+
+  // Function to cycle through background layers
+  toggleMapBackground() {
+    let vis = this;
+
+    vis.currentLayerIndex = (vis.currentLayerIndex + 1) % vis.layerNames.length;
+    let newLayerName = vis.layerNames[vis.currentLayerIndex];
+
+    // Remove only tile layers (preserve other map elements)
+    vis.theMap.eachLayer(layer => {
+        if (layer instanceof L.TileLayer) {
+            vis.theMap.removeLayer(layer);
+        }
+    });
+
+    // Ensure the new layer is added correctly
+    vis.baseLayers[newLayerName].addTo(vis.theMap);
+}
 
 
   renderVis() {
