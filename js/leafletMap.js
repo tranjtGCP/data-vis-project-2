@@ -85,12 +85,12 @@ class LeafletMap {
     vis.svg = vis.overlay.select('svg').attr("pointer-events", "auto")  
     
     // Define a scale for earthquake magnitude to radius
-    const radiusScale = d3.scaleLinear()
+    vis.radiusScale = d3.scaleLinear()
     .domain([d3.min(vis.data, d => d.mag), d3.max(vis.data, d => d.mag)])
-    .range([3, 10]); // Adjust range as needed
+    .range([3, 20]); // Adjust range as needed
 
     // Define a color scale for earthquake magnitude
-    const colorScale = d3.scaleLinear()
+    vis.colorScale = d3.scaleLinear()
     .domain([d3.min(vis.data, d => d.mag), d3.max(vis.data, d => d.mag)])
     .range(["lightblue", "darkblue"]); // Different shades of blue
 
@@ -102,7 +102,7 @@ class LeafletMap {
     vis.Dots = vis.svg.selectAll('circle')
                     .data(vis.data) 
                     .join('circle')
-                        .attr("fill", d => colorScale(d.magnitude))  // color by magnitude 
+                        .attr("fill", d => vis.colorScale(d.magnitude))  // color by magnitude 
                         .attr("stroke", "black")
                         //Leaflet has to take control of projecting points. 
                         //Here we are feeding the latitude and longitude coordinates to
@@ -111,12 +111,12 @@ class LeafletMap {
                         //We have to select the the desired one using .x or .y
                         .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).x)
                         .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).y) 
-                        .attr("r", d => radiusScale(d.magnitude))  // Scale radius based on Magnitude 
+                        .attr("r", d => vis.radiusScale(d.magnitude))  // Scale radius based on Magnitude 
                         .on('mouseover', function(event,d) { //function to add mouseover event
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
                               .attr("fill", "red") //change the fill
-                              .attr('r', radiusScale(d.magnitude) + 2); //increase radius on hover
+                              .attr('r', vis.radiusScale(d.magnitude) + 5); //increase radius on hover
 
                             // Convert the time string into a Date object and format it
                             let dateObj = new Date(d.time);
@@ -150,7 +150,7 @@ class LeafletMap {
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
                               .attr("fill", "steelblue") //change the fill  TO DO- change fill again
-                              .attr('r', d => radiusScale(d.magnitude)) //change radius
+                              .attr('r', d => vis.radiusScale(d.magnitude)) //change radius
 
                             d3.select('#tooltip').style('opacity', 0);//turn off the tooltip
 
@@ -179,8 +179,8 @@ class LeafletMap {
     vis.Dots
       .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
       .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y)
-      //.attr("fill", d => colorScale(d.magnitude))  //---- TO DO- color by magnitude 
-      .attr("r", d => radiusScale(d.magnitude) * zoomScaleFactor) ; 
+      .attr("fill", d => vis.colorScale(d.magnitude))  //---- TO DO- color by magnitude 
+      .attr("r", d => vis.radiusScale(d.magnitude)); 
 
   }
 
