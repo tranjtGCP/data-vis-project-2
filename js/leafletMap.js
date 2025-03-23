@@ -34,8 +34,13 @@ class LeafletMap {
 
     vis.theMap = L.map('my-map', {
       center: [0, 0],
-      zoom: 1.5,
-      minZoom: 1.38,
+      zoom: 2.5,
+      minZoom: 2,
+      maxBounds: [
+        [-100, -200],
+        [100, 200]
+
+      ],
       worldCopyJump: true,
       layers: [vis.baseLayers["Satellite"]]
     });
@@ -116,7 +121,7 @@ class LeafletMap {
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
                               .attr("fill", "red") //change the fill
-                              .attr('r', vis.radiusScale(d.magnitude) + 5); //increase radius on hover
+                              .attr('r', vis.radiusScale(d.magnitude) + 10); //increase radius on hover
 
                             // Convert the time string into a Date object and format it
                             let dateObj = new Date(d.time);
@@ -170,17 +175,17 @@ class LeafletMap {
   updateVis() {
     let vis = this;
 
-    let zoomLevel = vis.theMap.getZoom(); // Get the current zoom level
+    // let zoomLevel = vis.theMap.getZoom(); // Get the current zoom level
 
     // Adjust size scaling based on zoom
-    let zoomScaleFactor = 1 / Math.pow(2, zoomLevel - 5); // Adjust scaling factor dynamically
+    // let zoomScaleFactor = 1 / Math.pow(2, zoomLevel - 5); // Adjust scaling factor dynamically
    
    //redraw based on new zoom- need to recalculate on-screen position
     vis.Dots
       .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
       .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y)
       .attr("fill", d => vis.colorScale(d.magnitude))  //---- TO DO- color by magnitude 
-      .attr("r", d => vis.radiusScale(d.magnitude)); 
+      .attr("r", d => vis.radiusScale(d.magnitude) + 5); 
 
   }
 
