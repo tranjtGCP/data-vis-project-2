@@ -1,4 +1,5 @@
-// Array to hold information about the different time zones. Used to convert given global time to local time
+// Array to hold information about the different time zones. Used to convert given global time to local time. 
+// I used AI to generate this array as doing it manually would take forever.
 const manualZones = [
   // North America
   { name: "Pacific Time (US)", latMin: 32, latMax: 49, lonMin: -125, lonMax: -116, offset: -8, label: "PST" },
