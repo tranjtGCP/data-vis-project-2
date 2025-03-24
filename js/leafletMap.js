@@ -174,7 +174,7 @@ class LeafletMap {
                               .attr('r', vis.radiusScale(d.magnitude) + 10); //increase radius on hover
 
                             // Convert the time string into a Date object and format it
-                            let dateObj = new Date(d.time);
+                            let dateObj = new Date(d.localTime);
                             let formattedDate = formatDate(dateObj);
                             let formattedTime = formatTime(dateObj);
 
@@ -189,8 +189,8 @@ class LeafletMap {
                                         <strong>Magnitude:</strong> ${d.magnitude} <br>
                                         <strong>Depth:</strong> ${d3.format(',')(d.depth)} km <br>
                                         <Strong>Place:</strong> ${d.place} <br>
-                                        <strong>Date:</strong> ${formattedDate} <br>
-                                        <strong>Time:</strong> ${formattedTime} UTC
+                                        <strong>Local Date:</strong> ${formattedDate} <br>
+                                        <strong>Local Time:</strong> ${formattedTime} (${d.localTimezone})
                                     </div>
                                 `);
 
