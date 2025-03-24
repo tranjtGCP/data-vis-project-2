@@ -48,6 +48,44 @@ class LeafletMap {
     // Add a control button to toggle backgrounds
     let layerControl = L.control.layers(vis.baseLayers).addTo(vis.theMap);
 
+    //Add "Color By" dropdown to change circle colors
+    let colorControl = L.control({ position: "topright" });
+    colorControl.onAdd = function () {
+        let div = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+        div.innerHTML = `
+            <label for="color-select">Color By:</label>
+            <select id="color-select">
+                <option value="magnitude">Magnitude</option>
+                <option value="year">Year</option>
+                <option value="duration">Duration</option>
+                <option value="depth">Depth</option>
+            </select>
+        `;
+        setTimeout(() => {
+          document.getElementById("color-select").addEventListener("change", function (event) {
+            vis.colorMode = event.target.value;
+            vis.updateVis();
+          });
+        }, 0);
+        return div;
+    };
+    colorControl.addTo(vis.theMap);
+
+    // Initialize selected color mode
+    vis.colorMode = "magnitude";
+
+    // Define color scales
+    vis.colorScales = {
+        magnitude: d3.scaleSequential(d3.interpolateBlues)
+            .domain([d3.min(vis.data, d => d.magnitude), d3.max(vis.data, d => d.magnitude)]),
+        year: d3.scaleOrdinal(d3.schemeCategory10) // Distinct colors per year
+            .domain([...new Set(vis.data.map(d => new Date(d.time).getFullYear()))]),
+        duration: d3.scaleSequential(d3.interpolateOranges)
+            .domain([d3.min(vis.data, d => d.duration), d3.max(vis.data, d => d.duration)]),
+        depth: d3.scaleSequential(d3.interpolateReds)
+            .domain([d3.min(vis.data, d => d.depth), d3.max(vis.data, d => d.depth)])
+    };
+
     // Function to force the layer selector to stay open
     function keepLayerControlOpen() {
       let controlElement = document.querySelector(".leaflet-control-layers");
@@ -107,7 +145,13 @@ class LeafletMap {
     vis.Dots = vis.svg.selectAll('circle')
                     .data(vis.data) 
                     .join('circle')
-                        .attr("fill", d => vis.colorScale(d.magnitude))  // color by magnitude 
+                        .attr("fill", d => {
+                          if (vis.colorMode === "year") {
+                            return vis.colorScales.year(new Date(d.time).getFullYear());
+                          } else {
+                            return vis.colorScales[vis.colorMode](d[vis.colorMode]);
+                          }
+                        }) 
                         .attr("stroke", "black")
                         //Leaflet has to take control of projecting points. 
                         //Here we are feeding the latitude and longitude coordinates to
@@ -120,7 +164,13 @@ class LeafletMap {
                         .on('mouseover', function(event,d) { //function to add mouseover event
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
-                              .attr("fill", "red") //change the fill
+                              .attr("fill", d => {
+                                if (vis.colorMode === "year") {
+                                  return vis.colorScales.year(new Date(d.time).getFullYear());
+                                } else {
+                                  return vis.colorScales[vis.colorMode](d[vis.colorMode]);
+                                }
+                              })
                               .attr('r', vis.radiusScale(d.magnitude) + 10); //increase radius on hover
 
                             // Convert the time string into a Date object and format it
@@ -154,7 +204,13 @@ class LeafletMap {
                         .on('mouseleave', function() { //function to add mouseover event
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
-                              .attr("fill", "steelblue") //change the fill  TO DO- change fill again
+                              .attr("fill", d => {
+                                if (vis.colorMode === "year") {
+                                  return vis.colorScales.year(new Date(d.time).getFullYear());
+                                } else {
+                                  return vis.colorScales[vis.colorMode](d[vis.colorMode]);
+                                }
+                              })
                               .attr('r', d => vis.radiusScale(d.magnitude)) //change radius
 
                             d3.select('#tooltip').style('opacity', 0);//turn off the tooltip
@@ -184,7 +240,13 @@ class LeafletMap {
     vis.Dots
       .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
       .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y)
-      .attr("fill", d => vis.colorScale(d.magnitude))  //---- TO DO- color by magnitude 
+      .attr("fill", d => {
+        if (vis.colorMode === "year") {
+          return vis.colorScales.year(new Date(d.time).getFullYear());
+        } else {
+          return vis.colorScales[vis.colorMode](d[vis.colorMode]);
+        }
+      }) 
       .attr("r", d => vis.radiusScale(d.magnitude) + 5); 
 
   }
