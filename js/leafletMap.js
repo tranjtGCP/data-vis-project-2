@@ -32,17 +32,17 @@ class LeafletMap {
       })
   };
 
-    vis.theMap = L.map('my-map', {
+    vis.theMap = L.map("my-map", {
       center: [0, 0],
-      zoom: 2.5,
-      minZoom: 2,
+      zoom: 1.5,
+      minZoom: 1.5,
+      maxZoom: 4.5,
       maxBounds: [
         [-100, -200],
-        [100, 200]
-
+        [100, 200],
       ],
       worldCopyJump: true,
-      layers: [vis.baseLayers["Satellite"]]
+      layers: [vis.baseLayers["Satellite"]],
     });
 
     // Add a control button to toggle backgrounds
