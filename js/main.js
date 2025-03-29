@@ -157,7 +157,7 @@ let data, lineChart;
 d3.csv('data/2024-2025Processed.csv')
   .then(_data => {
     _data.forEach(d => {
-      d.value = +d.Value;
+      d.value = parseFloat(d.Value);
       d.date = new Date(d.Date);     // Convert string to date object
     });
 
