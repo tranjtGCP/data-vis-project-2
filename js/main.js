@@ -140,6 +140,12 @@ d3.csv('data/2024-2025.csv')  //**** TO DO  switch this to loading the quakes 'd
     // Initialize chart and then show it
     leafletMap = new LeafletMap({ parentElement: '#my-map'}, data);
 
+    // Initialize chart
+    const barchart = new Barchart({ parentElement: '#barchart'}, data);
+
+    // Show chart
+    barchart.updateVis();
+
 
   })
   .catch(error => console.error(error));
