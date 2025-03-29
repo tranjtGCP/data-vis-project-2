@@ -64,3 +64,38 @@ body {
 .leaflet-control-layers-toggle {
   display: none !important;
 }
+
+/* Style for the custom Leaflet dropdown control */
+.leaflet-control-custom {
+  background-color: white;
+  padding: 8px;
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+  font-family: sans-serif;
+  font-size: 14px;
+}
+
+/* Optional: Style the select element and label */
+.leaflet-control-custom label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+  color: #333;
+}
+
+.leaflet-control-custom select {
+  width: 100%;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Legend container */
+.info.legend {
+  background-color: white;
+  padding: 10px;
+  line-height: 1.3em;
+  border-radius: 5px;
+  font-size: 13px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+}
