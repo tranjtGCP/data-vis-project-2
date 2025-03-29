@@ -49,7 +49,7 @@ class LeafletMap {
     let layerControl = L.control.layers(vis.baseLayers).addTo(vis.theMap);
 
     //Add "Color By" dropdown to change circle colors
-    let colorControl = L.control({ position: "topright" });
+    let colorControl = L.control({ position: "bottomright" });
     colorControl.onAdd = function () {
         let div = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
         div.innerHTML = `
@@ -57,7 +57,6 @@ class LeafletMap {
             <select id="color-select">
                 <option value="magnitude">Magnitude</option>
                 <option value="year">Year</option>
-                <option value="duration">Duration</option>
                 <option value="depth">Depth</option>
             </select>
         `;
@@ -65,6 +64,7 @@ class LeafletMap {
           document.getElementById("color-select").addEventListener("change", function (event) {
             vis.colorMode = event.target.value;
             vis.updateVis();
+            vis.updateLegend();
           });
         }, 0);
         return div;
@@ -80,8 +80,6 @@ class LeafletMap {
             .domain([d3.min(vis.data, d => d.magnitude), d3.max(vis.data, d => d.magnitude)]),
         year: d3.scaleOrdinal(d3.schemeCategory10) // Distinct colors per year
             .domain([...new Set(vis.data.map(d => new Date(d.time).getFullYear()))]),
-        duration: d3.scaleSequential(d3.interpolateOranges)
-            .domain([d3.min(vis.data, d => d.duration), d3.max(vis.data, d => d.duration)]),
         depth: d3.scaleSequential(d3.interpolateReds)
             .domain([d3.min(vis.data, d => d.depth), d3.max(vis.data, d => d.depth)])
     };
@@ -107,6 +105,17 @@ class LeafletMap {
 
     // Keep menu open when the user hovers over it and moves back to the map
     let controlElement = document.querySelector(".leaflet-control-layers");
+
+    // Create color legend control
+    vis.legendControl = L.control({ position: "bottomright" });
+
+    vis.legendControl.onAdd = function () {
+      const div = L.DomUtil.create("div", "info legend");
+      div.innerHTML = "<div id='legend-content'></div>";
+      return div;
+    };
+
+    vis.legendControl.addTo(vis.theMap);
 
     controlElement.addEventListener("mouseenter", function () {
         keepLayerControlOpen();
@@ -226,6 +235,8 @@ class LeafletMap {
         vis.updateVis();
     });
 
+    vis.updateLegend();
+
     }
 
   updateVis() {
@@ -267,7 +278,54 @@ class LeafletMap {
 
     // Ensure the new layer is added correctly
     vis.baseLayers[newLayerName].addTo(vis.theMap);
-}
+  }
+
+  updateLegend() {
+    let vis = this;
+    const legendDiv = document.getElementById("legend-content");
+    if (!legendDiv) return;
+  
+    // Clear existing legend
+    legendDiv.innerHTML = "";
+  
+    const colorMode = vis.colorMode;
+    const scale = vis.colorScales[colorMode];
+  
+    // Custom breaks for linear/sequential scales
+    if (colorMode === "magnitude" || colorMode === "duration" || colorMode === "depth") {
+      const min = scale.domain()[0];
+      const max = scale.domain()[1];
+      const steps = 6;
+      const stepSize = (max - min) / steps;
+  
+      for (let i = 0; i < steps; i++) {
+        const val = min + i * stepSize;
+        const nextVal = val + stepSize;
+        const color = scale(val);
+  
+        legendDiv.innerHTML += `
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <div style="width: 20px; height: 12px; background:${color}; margin-right: 6px;"></div>
+            <span>${val.toFixed(1)} – ${nextVal.toFixed(1)}</span>
+          </div>
+        `;
+      }
+    }
+  
+    // Ordinal scale (e.g., year)
+    if (colorMode === "year") {
+      const years = scale.domain().sort();
+      years.forEach(year => {
+        const color = scale(year);
+        legendDiv.innerHTML += `
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <div style="width: 20px; height: 12px; background:${color}; margin-right: 6px;"></div>
+            <span>${year}</span>
+          </div>
+        `;
+      });
+    }
+  }
 
 
   renderVis() {
