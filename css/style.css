@@ -31,6 +31,7 @@ body {
   border-width: 10px;
   border-color: lightblue;
   filter: drop-shadow(10px 10px 5px gray);
+  background-color: #e5e5e5;
 
   :hover {
     cursor: crosshair
@@ -124,12 +125,15 @@ body {
 
 #barchart-container {
   border: 1px solid black;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 40px auto;
   width: fit-content;
   background-color: #e5e5e5;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  border-style: solid;
+  border-radius: 20px;
+  border-width: 10px;
+  border-color: lightblue;
+  filter: drop-shadow(10px 10px 5px gray);
 }
 
 .chart-title {

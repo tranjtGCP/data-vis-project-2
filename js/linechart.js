@@ -9,9 +9,9 @@ class LineChart {
     this.config = {
       parentElement: _config.parentElement,
       containerWidth: _config.containerWidth || 800,
-      containerHeight: _config.containerHeight || 450,
-      margin: _config.margin || {top: 25, right: 0, bottom: 30, left: 80}
-    }
+      containerHeight: _config.containerHeight || 430,
+      margin: _config.margin || { top: 30, right: 0, bottom: 40, left: 80 },
+    };
     this.data = _data;
     this.initVis();
   }
@@ -56,9 +56,18 @@ class LineChart {
       .tickPadding(10);
 
     // Define size of SVG drawing area
-    vis.svg = d3.select(vis.config.parentElement)
-        .attr('width', vis.config.containerWidth)
-        .attr('height', vis.config.containerHeight);
+    vis.svg = d3
+      .select(vis.config.parentElement)
+      .attr("width", vis.config.containerWidth)
+      .attr("height", vis.config.containerHeight);
+
+    vis.svg
+      .append("text")
+      .attr("class", "chart-title")
+      .attr("x", vis.config.containerWidth / 2)
+      .attr("y", vis.config.margin.top / 2)
+      .attr("text-anchor", "middle")
+      .text("Number of Quakes Over the Years");
 
     // Append group element that will contain our actual chart (see margin convention)
     vis.chart = vis.svg.append('g')
@@ -158,7 +167,8 @@ class LineChart {
           .attr(
             "transform",
             `translate(${vis.xScale(d.date)},${vis.yScale(d.value)})`
-          );
+          )
+          .style("fill", "white");
 
         vis.tooltip
           .select("text")
