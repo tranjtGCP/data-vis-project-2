@@ -176,6 +176,54 @@ class Barchart {
   
     vis.yAxisG.call(vis.yAxis);
   
+    // Add invisible hitboxes for tooltips
+    vis.chart.selectAll(".bar-hit")
+    .data(vis.binnedData)
+    .join("rect")
+    .attr("class", "bar-hit")
+    .attr("x", d => vis.xScale(d.label) - 2)
+    .attr("y", 0)
+    .attr("width", vis.xScale.bandwidth() + 4)
+    .attr("height", vis.height)
+    .attr("fill", "transparent")
+    .on("mouseover", (event, d) => {
+      const bar = vis.chart.selectAll(".bar")
+        .filter(b => b.label === d.label)
+        .attr("original-fill", function () {
+          return d3.select(this).attr("fill");
+        })
+        .attr("fill", "#FFD700") // Gold highlight
+        .attr("stroke", "black")
+        .attr("stroke-width", "1px")
+        .style("transform", "scaleY(1.1)")
+        .style("transform-origin", "bottom");
+
+      d3.select("#tooltip")
+        .style("opacity", 1)
+        .html(`
+          <strong>${vis.displayMode === 'magnitude' ? 'Magnitude' : 'Depth'}:</strong> ${d.label}<br>
+          <strong>Number of Earthquakes:</strong> ${d.count.toLocaleString()}<br>
+          <strong>Percent:</strong> ${d.percentage.toFixed(1)}%
+        `);
+    })
+    .on("mousemove", (event) => {
+      d3.select("#tooltip")
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", (event, d) => {
+      vis.chart.selectAll(".bar")
+        .filter(b => b.label === d.label)
+        .attr("fill", function () {
+          return d3.select(this).attr("original-fill");
+        })
+        .attr("stroke", null)
+        .attr("stroke-width", null)
+        .style("transform", null);
+
+      d3.select("#tooltip").style("opacity", 0);
+    });
+
     // Bind data and create bars
     vis.chart.selectAll(".bar")
       .data(vis.binnedData)
@@ -224,29 +272,5 @@ class Barchart {
   setDisplayMode(mode) {
     this.displayMode = mode;
     this.updateVis();
-  }
-
-  /**
-   * This function contains the D3 code for binding data to visual elements.
-   * We call this function every time the data or configurations change 
-   * (i.e., user selects a different year)
-   */
-  renderVis() {
-    let vis = this;
-
-    // Add rectangles
-    vis.chart.selectAll('.bar')
-        .data(vis.data)
-        .enter()
-      .append('rect')
-        .attr('class', 'bar')
-        .attr('width', d => vis.xScale(vis.xValue(d)))
-        .attr('height', vis.yScale.bandwidth())
-        .attr('y', d => vis.yScale(vis.yValue(d)))
-        .attr('x', 0);
-    
-    // Update the axes because the underlying scales might have changed
-    vis.xAxisG.call(vis.xAxis);
-    vis.yAxisG.call(vis.yAxis);
   }
 }

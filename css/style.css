@@ -146,10 +146,12 @@ body {
 }
 
 .bar:hover {
-  fill: orange;
+  fill: gold;
   stroke: black;
   stroke-width: 1px;
   cursor: pointer;
+  transform: scaleY(1.1);
+  transform-origin: bottom;
 }
 
 #bar-dropdown-container {
@@ -161,4 +163,8 @@ body {
   border-radius: 5px;
   font-size: 13px;
   box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+.bar {
+  transition: transform 0.15s ease, fill 0.15s ease;
 }
