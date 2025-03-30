@@ -96,7 +96,7 @@ class Barchart {
     .attr("class", "axis-title")
     .attr("text-anchor", "middle")
     .attr("x", vis.width / 2)
-    .attr("y", 310)
+    .attr("y", 50)
   }
 
   /**
@@ -171,8 +171,8 @@ class Barchart {
     // Update axes
     vis.xAxisG.call(vis.xAxis)
       .selectAll("text")
-      .attr("transform", "rotate(-35)")
-      .style("text-anchor", "end");
+      .attr("transform", null)
+      .style("text-anchor", "middle");
   
     vis.yAxisG.call(vis.yAxis);
   
