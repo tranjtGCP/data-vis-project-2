@@ -45,11 +45,6 @@ body {
   }
 }
 
-#chart {
-  
-}
-
-
 #tooltip {
   position: absolute;
   opacity: 0;

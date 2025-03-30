@@ -98,9 +98,52 @@ class LineChart {
         .style('display', 'none');
 
     vis.tooltip.append('circle')
-        .attr('r', 4);
+        .attr('r', 4)
+        .attr("stroke", "black")
+        .attr("fill", "gold");
 
-    vis.tooltip.append('text');
+    // Background rectangle
+    vis.tooltip.append("rect")
+    .attr("class", "tooltip-bg")
+    .attr("width", 160)
+    .attr("height", 40)
+    .attr("fill", "white")
+    .attr("stroke", "#ccc")
+    .attr("rx", 4)
+    .attr("ry", 4);
+
+    // First line: date
+    vis.tooltip.append("text")
+    .attr("class", "tooltip-date")
+    .attr("x", 8)
+    .attr("y", 16)
+    .style("font-size", "12px")
+    .style("fill", "#333");
+
+    // Second line: value
+    vis.tooltip.append("text")
+    .attr("class", "tooltip-value")
+    .attr("x", 8)
+    .attr("y", 32)
+    .style("font-size", "12px")
+    .style("fill", "#333");
+
+    // X-axis label
+    vis.xAxisLabel = vis.svg.append("text")
+    .attr("class", "axis-title")
+    .attr("text-anchor", "middle")
+    .attr("x", vis.config.containerWidth / 2)
+    .attr("y", vis.config.containerHeight + 10)
+    .text("Date");
+
+    // Y-axis label
+    vis.yAxisLabel = vis.svg.append("text")
+    .attr("class", "axis-title")
+    .attr("text-anchor", "middle")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -vis.config.containerHeight / 2)
+    .attr("y", 30)
+    .text("Number of Earthquakes");
   }
 
   /**
@@ -125,6 +168,36 @@ class LineChart {
 
     vis.bisectDate = d3.bisector(vis.xValue).left;
 
+    vis.trackingArea
+      .on("mousemove", function(event) {
+        const mouseX = d3.pointer(event)[0];
+        const date = vis.xScale.invert(mouseX);
+        const i = vis.bisectDate(vis.data, date);
+        const d0 = vis.data[i - 1];
+        const d1 = vis.data[i];
+        const d = !d0 || !d1 ? d0 || d1 : (date - d0.date > d1.date - date ? d1 : d0);
+
+        const xPos = vis.xScale(d.date);
+        const yPos = vis.yScale(d.value);
+
+        vis.tooltip
+          .style("display", null)
+          .attr("transform", `translate(${xPos},${yPos})`);
+
+        vis.tooltip.select("circle")
+          .attr("fill", "gold") 
+          .attr("stroke", "black");
+
+        vis.tooltip.select(".tooltip-date")
+          .text(`Date: ${d3.timeFormat("%b %d, %Y")(d.date)}`);
+        
+        vis.tooltip.select(".tooltip-value")
+          .text(`Number of Earthquakes: ${d.value}`);
+      })
+      .on("mouseout", function() {
+        vis.tooltip.style("display", "none");
+      });
+
     vis.renderVis();
   }
 
@@ -141,45 +214,7 @@ class LineChart {
       .join("path")
       .attr("class", "chart-line")
       .attr("d", vis.line)
-      .style("fill", "steelblue");
-
-    vis.trackingArea
-      .on("mouseenter", () => {
-        vis.tooltip.style("display", "block");
-      })
-      .on("mouseleave", () => {
-        vis.tooltip.style("display", "none");
-      })
-      .on("mousemove", function (event) {
-        // Get date that corresponds to current mouse x-coordinate
-        const xPos = d3.pointer(event, this)[0]; // First array element is x, second is y
-        const date = vis.xScale.invert(xPos);
-
-        // Find nearest data point
-        const index = vis.bisectDate(vis.data, date, 1);
-        const a = vis.data[index - 1];
-        const b = vis.data[index];
-        const d = b && date - a.date > b.date - date ? b : a;
-
-        // Update tooltip
-        vis.tooltip
-          .select("circle")
-          .attr(
-            "transform",
-            `translate(${vis.xScale(d.date)},${vis.yScale(d.value)})`
-          )
-          .style("fill", "white");
-
-        vis.tooltip
-          .select("text")
-          .attr(
-            "transform",
-            `translate(${vis.xScale(d.date)},${vis.yScale(d.value) - 15})`
-          )
-          .text(Math.round(d.value));
-
-        d3.select();
-      });
+      .style("fill", "#008080");
     
     // Update the axes
     vis.xAxisG.call(vis.xAxis);
