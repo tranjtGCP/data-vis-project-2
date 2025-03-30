@@ -10,7 +10,7 @@ class LineChart {
       parentElement: _config.parentElement,
       containerWidth: _config.containerWidth || 800,
       containerHeight: _config.containerHeight || 430,
-      margin: _config.margin || { top: 30, right: 0, bottom: 40, left: 80 },
+      margin: _config.margin || { top: 60, right: 0, bottom: 40, left: 80 },
     };
     this.data = _data;
     this.initVis();
@@ -67,7 +67,7 @@ class LineChart {
       .attr("x", vis.config.containerWidth / 2)
       .attr("y", vis.config.margin.top / 2)
       .attr("text-anchor", "middle")
-      .text("Number of Quakes Over the Years");
+      .text("Number of Earthquakes Over the Years");
 
     // Append group element that will contain our actual chart (see margin convention)
     vis.chart = vis.svg.append('g')
