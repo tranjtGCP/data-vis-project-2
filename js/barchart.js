@@ -17,6 +17,7 @@ class Barchart {
     }
     this.data = _data;
     this.displayMode = 'magnitude';
+    this.suppressBrush = false;
     this.initVis();
   }
   
@@ -79,24 +80,57 @@ class Barchart {
 
     // Append titles, legends and other static elements here
     vis.chartTitle = vis.svg.append("text")
-    .attr("class", "chart-title")
-    .attr("x", vis.config.containerWidth / 2 + 100)
-    .attr("y", vis.config.margin.top / 2)
-    .attr("text-anchor", "middle");
+      .attr("class", "chart-title")
+      .attr("x", vis.config.containerWidth / 2 + 100)
+      .attr("y", vis.config.margin.top / 2)
+      .attr("text-anchor", "middle");
 
     vis.yAxisG.append("text")
-    .attr("class", "axis-title")
-    .attr("text-anchor", "middle")
-    .attr("transform", `rotate(-90)`)
-    .attr("x", -vis.height / 2)
-    .attr("y", -vis.config.margin.left + 20)
-    .text("Percentage of Earthquakes");
+      .attr("class", "axis-title")
+      .attr("text-anchor", "middle")
+      .attr("transform", `rotate(-90)`)
+      .attr("x", -vis.height / 2)
+      .attr("y", -vis.config.margin.left + 20)
+      .text("Percentage of Earthquakes");
 
     vis.xAxisLabel = vis.xAxisG.append("text")
-    .attr("class", "axis-title")
-    .attr("text-anchor", "middle")
-    .attr("x", vis.width / 2)
-    .attr("y", 50)
+      .attr("class", "axis-title")
+      .attr("text-anchor", "middle")
+      .attr("x", vis.width / 2)
+      .attr("y", 50)
+
+    // Add brush
+    vis.brush = d3.brushX()
+      .extent([[0, 0], [vis.width, vis.height]])
+      .on("end", function(event) {
+        if (vis.suppressBrush) return;
+
+        const selection = event.selection;
+        if (!selection) {
+          handleBrushedData(vis.originalData, "barchart");
+          return;
+        }
+
+        const [x0, x1] = selection;
+
+        const selectedBins = vis.xScale.domain().filter(label => {
+          const binStart = vis.xScale(label);
+          const binEnd = binStart + vis.xScale.bandwidth();
+          return binStart >= x0 && binEnd <= x1;
+        });
+
+        const brushedData = vis.originalData.filter(d => {
+          const value = vis.displayMode === "magnitude" ? d.magnitude : d.depth;
+          const label = vis.getBinLabel(value);
+          return selectedBins.includes(label);
+        });
+
+        handleBrushedData(brushedData, "barchart");
+      });
+
+    vis.chart.append("g")
+      .attr("class", "brush")
+      .call(vis.brush);
   }
 
   /**
@@ -272,5 +306,38 @@ class Barchart {
   setDisplayMode(mode) {
     this.displayMode = mode;
     this.updateVis();
+  }
+
+  // Method to update the dataset to be used
+  updateData(data) {
+    this.data = data;
+
+    // Disable brush trigger
+    this.suppressBrush = true;
+
+    this.updateVis();
+
+    // Re-enable after render finishes
+    setTimeout(() => {
+      this.suppressBrush = false;
+    }, 0);
+  }
+
+  // Method to get the label for the data bins
+  getBinLabel(value) {
+    if (this.displayMode === "magnitude") {
+      const lower = Math.floor(value);
+      const upper = lower + 1;
+      return `${lower}.0–${upper}.0`;
+    }
+  
+    if (this.displayMode === "depth") {
+      const step = 100;
+      const lower = Math.floor(value / step) * step;
+      const upper = lower + step;
+      return `${lower}–${upper} km`;
+    }
+  
+    return "";
   }
 }

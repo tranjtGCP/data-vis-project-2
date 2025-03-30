@@ -107,6 +107,20 @@ function formatOffset(offset) {
   return `${sign}${String(hours).padStart(2, '0')}:${minutes === 0 ? "00" : "30"}`;
 }
 
+// Initialize bar chart and map objects
+let barchart, leafletMap;
+
+// Method to update the visualizations after brushing
+function handleBrushedData(filteredData, source = null) {
+  barchart.updateData(filteredData);
+  leafletMap.updateData(filteredData);
+
+  // Optionally clear the brush from bar chart after interaction
+  if (source === "barchart") {
+    d3.select(".brush").call(barchart.brush.move, null);
+  }
+}
+
 d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'data/2024-2025.csv'
   .then((data) => {
     console.log("number of items: " + data.length);
@@ -151,10 +165,12 @@ d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'da
 
     // Initialize chart and then show it
     leafletMap = new LeafletMap({ parentElement: "#my-map" }, data);
+    leafletMap.originalData = data;
 
     // Initialize chart
-    const barchart = new Barchart({ parentElement: "#barchart" }, data);
+    barchart = new Barchart({ parentElement: "#barchart" }, data);
     document.getElementById("bar-metric").value = barchart.displayMode;
+    barchart.originalData = data;
     document
       .getElementById("bar-metric")
       .addEventListener("change", function () {
@@ -165,6 +181,12 @@ d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'da
     barchart.updateVis();
   })
   .catch((error) => console.error(error));
+
+// Handler for the brush reset button on the bar chart
+document.getElementById("reset-brush").addEventListener("click", () => {
+  handleBrushedData(barchart.originalData);  // show all quakes
+  d3.select(".brush").call(barchart.brush.move, null);  // clear brush
+});
 
 // We use d3.timeParse() to convert a string into JS date object
 // Initialize helper function

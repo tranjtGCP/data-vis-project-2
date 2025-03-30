@@ -150,81 +150,8 @@ class LeafletMap {
     const formatDate = d3.timeFormat("%B %d, %Y");
     const formatTime = d3.timeFormat("%H:%M:%S");
 
-    //these are the city locations, displayed as a set of dots 
-    vis.Dots = vis.svg.selectAll('circle')
-                    .data(vis.data) 
-                    .join('circle')
-                        .attr("fill", d => {
-                          if (vis.colorMode === "year") {
-                            return vis.colorScales.year(new Date(d.time).getFullYear());
-                          } else {
-                            return vis.colorScales[vis.colorMode](d[vis.colorMode]);
-                          }
-                        }) 
-                        .attr("stroke", "black")
-                        //Leaflet has to take control of projecting points. 
-                        //Here we are feeding the latitude and longitude coordinates to
-                        //leaflet so that it can project them on the coordinates of the view. 
-                        //the returned conversion produces an x and y point. 
-                        //We have to select the the desired one using .x or .y
-                        .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).x)
-                        .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).y) 
-                        .attr("r", d => vis.radiusScale(d.magnitude))  // Scale radius based on Magnitude 
-                        .on('mouseover', function(event,d) { //function to add mouseover event
-                            d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
-                              .duration('150') //how long we are transitioning between the two states (works like keyframes)
-                              .attr("fill", d => {
-                                if (vis.colorMode === "year") {
-                                  return vis.colorScales.year(new Date(d.time).getFullYear());
-                                } else {
-                                  return vis.colorScales[vis.colorMode](d[vis.colorMode]);
-                                }
-                              })
-                              .attr('r', vis.radiusScale(d.magnitude) + 10); //increase radius on hover
-
-                            // Convert the time string into a Date object and format it
-                            let dateObj = new Date(d.localTime);
-                            let formattedDate = formatDate(dateObj);
-                            let formattedTime = formatTime(dateObj);
-
-                            //create a tool tip
-                            d3.select('#tooltip')
-                                .style('opacity', 1)
-                                .style('z-index', 1000000)
-                                  // Format number with million and thousand separator
-                                  //***** TO DO- change this tooltip to show useful information about the quakes
-                                  .html(`
-                                    <div class="tooltip-label">
-                                        <strong>Magnitude:</strong> ${d.magnitude} <br>
-                                        <strong>Depth:</strong> ${d3.format(',')(d.depth)} km <br>
-                                        <Strong>Place:</strong> ${d.place} <br>
-                                        <strong>Local Date:</strong> ${formattedDate} <br>
-                                        <strong>Local Time:</strong> ${formattedTime} (${d.localTimezone})
-                                    </div>
-                                `);
-
-                          })
-                        .on('mousemove', (event) => {
-                            //position the tooltip
-                            d3.select('#tooltip')
-                             .style('left', (event.pageX + 10) + 'px')   
-                              .style('top', (event.pageY + 10) + 'px');
-                         })              
-                        .on('mouseleave', function() { //function to add mouseover event
-                            d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
-                              .duration('150') //how long we are transitioning between the two states (works like keyframes)
-                              .attr("fill", d => {
-                                if (vis.colorMode === "year") {
-                                  return vis.colorScales.year(new Date(d.time).getFullYear());
-                                } else {
-                                  return vis.colorScales[vis.colorMode](d[vis.colorMode]);
-                                }
-                              })
-                              .attr('r', d => vis.radiusScale(d.magnitude)) //change radius
-
-                            d3.select('#tooltip').style('opacity', 0);//turn off the tooltip
-
-                          })
+    //Create the circles 
+    vis.updateVis();
     
     //handler here for updating the map, as you zoom in and out           
     vis.theMap.on("zoom", function () {
@@ -241,14 +168,20 @@ class LeafletMap {
 
   updateVis() {
     let vis = this;
+  
+    // Remove existing SVG circles
+    vis.svg.selectAll(".quake-circle").remove();
+  
+    // Define time format functions
+    const formatDate = d3.timeFormat("%B %d, %Y");
+    const formatTime = d3.timeFormat("%H:%M:%S");
 
-    // let zoomLevel = vis.theMap.getZoom(); // Get the current zoom level
-
-    // Adjust size scaling based on zoom
-    // let zoomScaleFactor = 1 / Math.pow(2, zoomLevel - 5); // Adjust scaling factor dynamically
-   
-   //redraw based on new zoom- need to recalculate on-screen position
-    vis.Dots
+    // Rebind filtered data
+    vis.Dots = vis.svg.selectAll(".quake-circle")
+      .data(vis.data)
+      .enter()
+      .append("circle")
+      .attr("class", "quake-circle")
       .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
       .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y)
       .attr("fill", d => {
@@ -257,9 +190,67 @@ class LeafletMap {
         } else {
           return vis.colorScales[vis.colorMode](d[vis.colorMode]);
         }
-      }) 
-      .attr("r", d => vis.radiusScale(d.magnitude) + 5); 
+      })
+      .attr("r", d => vis.radiusScale(d.magnitude))
+      .attr("stroke", "black")
+      .on('mouseover', function(event,d) { //function to add mouseover event
+        d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
+          .duration('150') //how long we are transitioning between the two states (works like keyframes)
+          .attr("fill", d => {
+            if (vis.colorMode === "year") {
+              return vis.colorScales.year(new Date(d.time).getFullYear());
+            } else {
+              return vis.colorScales[vis.colorMode](d[vis.colorMode]);
+            }
+          })
+          .attr('r', vis.radiusScale(d.magnitude) + 10); //increase radius on hover
 
+        // Convert the time string into a Date object and format it
+        let dateObj = new Date(d.localTime);
+        let formattedDate = formatDate(dateObj);
+        let formattedTime = formatTime(dateObj);
+
+        //create a tool tip
+        d3.select('#tooltip')
+            .style('opacity', 1)
+            .style('z-index', 1000000)
+              // Format number with million and thousand separator
+              //***** TO DO- change this tooltip to show useful information about the quakes
+              .html(`
+                <div class="tooltip-label">
+                    <strong>Magnitude:</strong> ${d.magnitude} <br>
+                    <strong>Depth:</strong> ${d3.format(',')(d.depth)} km <br>
+                    <Strong>Place:</strong> ${d.place} <br>
+                    <strong>Local Date:</strong> ${formattedDate} <br>
+                    <strong>Local Time:</strong> ${formattedTime} (${d.localTimezone})
+                </div>
+            `);
+
+      })
+    .on('mousemove', (event) => {
+        //position the tooltip
+        d3.select('#tooltip')
+         .style('left', (event.pageX + 10) + 'px')   
+          .style('top', (event.pageY + 10) + 'px');
+     })              
+    .on('mouseleave', function() { //function to add mouseover event
+        d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
+          .duration('150') //how long we are transitioning between the two states (works like keyframes)
+          .attr("fill", d => {
+            if (vis.colorMode === "year") {
+              return vis.colorScales.year(new Date(d.time).getFullYear());
+            } else {
+              return vis.colorScales[vis.colorMode](d[vis.colorMode]);
+            }
+          })
+          .attr('r', d => vis.radiusScale(d.magnitude)) //change radius
+
+        d3.select('#tooltip').style('opacity', 0);//turn off the tooltip
+
+      });
+    
+      console.log("🔄 Map rendering", vis.data.length, "points");
+      console.log("🧪 Max magnitude: ", d3.max(vis.data, d => d.magnitude));
   }
 
   // Function to cycle through background layers
@@ -327,11 +318,9 @@ class LeafletMap {
     }
   }
 
-
-  renderVis() {
-    let vis = this;
-
-    //not using right now... 
- 
+  // Method to update the dataset to be used
+  updateData(data) {
+    this.data = data;
+    this.updateVis(); 
   }
 }
