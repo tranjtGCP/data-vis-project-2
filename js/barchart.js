@@ -16,6 +16,7 @@ class Barchart {
       margin: _config.margin || {top: 25, right: 5, bottom: 20, left: 80}
     }
     this.data = _data;
+    this.displayMode = 'magnitude';
     this.initVis();
   }
   
@@ -77,12 +78,11 @@ class Barchart {
         .attr('class', 'axis y-axis');
 
     // Append titles, legends and other static elements here
-    vis.svg.append("text")
+    vis.chartTitle = vis.svg.append("text")
     .attr("class", "chart-title")
     .attr("x", vis.config.containerWidth / 2 + 100)
     .attr("y", vis.config.margin.top / 2)
-    .attr("text-anchor", "middle")
-    .text("Percentage of Earthquakes by Magnitude Range");
+    .attr("text-anchor", "middle");
 
     vis.yAxisG.append("text")
     .attr("class", "axis-title")
@@ -92,12 +92,11 @@ class Barchart {
     .attr("y", -vis.config.margin.left + 20)
     .text("Percentage of Earthquakes");
 
-    vis.xAxisG.append("text")
+    vis.xAxisLabel = vis.xAxisG.append("text")
     .attr("class", "axis-title")
     .attr("text-anchor", "middle")
     .attr("x", vis.width / 2)
     .attr("y", 310)
-    .text("Magnitude Range");
   }
 
   /**
@@ -108,38 +107,62 @@ class Barchart {
   updateVis() {
     let vis = this;
   
-    // Create bins: [3–4), [4–5), [5–6), ..., up to 10.0
-    const minMag = 3;
-    const maxMag = 10;
-    const binSize = 1;
-    const bins = [];
-  
-    for (let i = minMag; i < maxMag; i += binSize) {
-      const label = `${i.toFixed(1)}–${(i + binSize).toFixed(1)}`;
-      bins.push({ range: [i, i + binSize], label: label, count: 0 });
+    let accessor, min, max, binSize, labelFormatter;
+
+    // Determine mode: magnitude or depth
+    if (vis.displayMode === 'magnitude') {
+      accessor = d => d.magnitude;
+      min = 3;
+      max = 10;
+      binSize = 1;
+      labelFormatter = (start, end) => `${start.toFixed(1)}–${end.toFixed(1)}`;
+    } else {
+      accessor = d => d.depth;
+      min = 0;
+      max = 700;
+      binSize = 100;
+      labelFormatter = (start, end) => `${start}–${end} km`;
     }
-  
-    // Count how many earthquakes fall into each bin
+
+    // Create bins
+    let bins = [];
+    for (let i = min; i < max; i += binSize) {
+      bins.push({
+        range: [i, i + binSize],
+        label: labelFormatter(i, i + binSize),
+        count: 0
+      });
+    }
+
+    // Bin the data
     vis.data.forEach(d => {
-      if (d.magnitude !== undefined && !isNaN(d.magnitude)) {
-        for (const bin of bins) {
-          if (d.magnitude >= bin.range[0] && d.magnitude < bin.range[1]) {
-            bin.count++;
-            break;
-          }
+      const val = accessor(d);
+      for (const bin of bins) {
+        if (val >= bin.range[0] && val < bin.range[1]) {
+          bin.count++;
+          break;
         }
       }
     });
 
-    // Compute total quake count
     const total = d3.sum(bins, d => d.count);
-
-    // Add a percentage property to each bin
     bins.forEach(d => {
       d.percentage = (d.count / total) * 100;
     });
-  
+
     vis.binnedData = bins;
+
+    // Set up the colors to use for the bars
+    let colorScale;
+    if (vis.displayMode === 'magnitude') {
+      colorScale = d3.scaleSequential()
+        .domain([3, 10]) // adjust to match bin range
+        .interpolator(d3.interpolateBlues);
+    } else {
+      colorScale = d3.scaleSequential()
+        .domain([0, 700]) // depth in km
+        .interpolator(d3.interpolateReds);
+    }
   
     // Set domains for scales
     vis.xScale.domain(bins.map(d => d.label));
@@ -162,14 +185,21 @@ class Barchart {
       .attr("y", d => vis.yScale(d.percentage))
       .attr("width", vis.xScale.bandwidth())
       .attr("height", d => vis.height - vis.yScale(d.percentage))
-      .attr("fill", "steelblue")
+      .attr("fill", d => {
+        const val = vis.displayMode === 'magnitude'
+          ? (d.range[0] + d.range[1]) / 2
+          : (d.range[0] + d.range[1]) / 2;
+      
+        return colorScale(val);
+      })
 
       //Add tooltip interactivity
       .on("mouseover", (event, d) => {
+        const metricLabel = vis.displayMode === 'magnitude' ? "Magnitude" : "Depth";
         d3.select("#tooltip")
           .style("opacity", 1)
           .html(`
-            <strong>Magnitude:</strong> ${d.label}<br>
+            <strong>${metricLabel}:</strong> ${d.label}<br>
             <strong>Number of Earthquakes:</strong> ${d.count.toLocaleString()}<br>
             <strong>Percent:</strong> ${d.percentage.toFixed(1)}%
           `);
@@ -182,6 +212,18 @@ class Barchart {
       .on("mouseout", () => {
         d3.select("#tooltip").style("opacity", 0);
       });
+    
+    // Update the title and x axis label
+    const label = vis.displayMode === 'magnitude' ? "Magnitude" : "Depth";
+
+    vis.chartTitle.text(`Percentage of Earthquakes by ${label} Range`);
+    vis.xAxisLabel.text(`${label} Range`);
+  }
+
+  // Method to switch which data is displayed in the bar chart
+  setDisplayMode(mode) {
+    this.displayMode = mode;
+    this.updateVis();
   }
 
   /**

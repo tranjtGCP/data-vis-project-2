@@ -142,6 +142,10 @@ d3.csv('data/2024-2025.csv')  //**** TO DO  switch this to loading the quakes 'd
 
     // Initialize chart
     const barchart = new Barchart({ parentElement: '#barchart'}, data);
+    document.getElementById("bar-metric").value = barchart.displayMode;
+    document.getElementById("bar-metric").addEventListener("change", function() {
+      barchart.setDisplayMode(this.value);
+    });
 
     // Show chart
     barchart.updateVis();
