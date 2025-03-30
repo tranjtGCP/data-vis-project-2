@@ -45,9 +45,10 @@ class LineChart {
     // vis.xScale.domain(d3.extent(vis.data, d => d.date));
 
     // Initialize axes
-    vis.xAxis = d3.axisBottom(vis.xScale)
-      .ticks(d3.timeMonth.every(1))
-      .tickFormat(d3.timeFormat("%b %Y"))
+    vis.xAxis = d3
+      .axisBottom(vis.xScale)
+      .ticks(d3.timeYear.every(1))
+      .tickFormat(d3.timeFormat("%Y"));
 
     vis.yAxis = d3
       .axisLeft(vis.yScale)
