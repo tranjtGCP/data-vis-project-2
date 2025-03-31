@@ -10,6 +10,8 @@ class LeafletMap {
       parentElement: _config.parentElement,
     }
     this.data = _data;
+    this.activeMapBrush = null; // Current rectangular bounds
+    this.originalData = [...this.data]; // Store full data once
     this.initVis();
   }
   
@@ -18,6 +20,19 @@ class LeafletMap {
    */
   initVis() {
     let vis = this;
+
+    // Initialize the brush mode
+    vis.brushMode = false;
+
+    document.querySelectorAll("input[name='map-mode']").forEach(input => {
+      input.addEventListener("change", (e) => {
+        vis.brushMode = e.target.value === "brush";
+        vis.theMap.dragging.enable();  // always re-enable panning
+        if (vis.brushMode) {
+          vis.theMap.dragging.disable();  // disable pan if brushing
+        }
+      });
+    });
 
     // Define multiple map backgrounds
     vis.baseLayers = {
@@ -63,8 +78,8 @@ class LeafletMap {
         setTimeout(() => {
           document.getElementById("color-select").addEventListener("change", function (event) {
             vis.colorMode = event.target.value;
-            vis.updateVis();
             vis.updateLegend();
+            recombineFilters();
           });
         }, 0);
         return div;
@@ -112,6 +127,10 @@ class LeafletMap {
     vis.legendControl.onAdd = function () {
       const div = L.DomUtil.create("div", "info legend");
       div.innerHTML = "<div id='legend-content'></div>";
+
+      // Prevent Leaflet from reacting to clicks on the dropdown
+      L.DomEvent.disableClickPropagation(div);
+
       return div;
     };
 
@@ -160,6 +179,46 @@ class LeafletMap {
     
     vis.theMap.on("zoomend", function () {
         vis.updateVis();
+    });
+
+    // Add invisible rectangle for brushing
+    vis.mapBrush = L.rectangle([[0, 0], [0, 0]], {
+      color: "#3388ff",
+      weight: 1,
+      fillOpacity: 0.1,
+      interactive: false
+    }).addTo(vis.theMap);
+
+    vis.mapBrush.setStyle({ opacity: 0, fillOpacity: 0 });
+
+    // Handlers for panning and brushing
+    vis.theMap.on('mousedown', function(e) {
+      if (!vis.brushMode) return;
+      vis.isBrushing = true;
+      vis.brushStart = e.latlng;
+
+      // Set initial bounds to a single point so it becomes visible
+      vis.mapBrush.setStyle({ opacity: 1, fillOpacity: 0.2 });
+      vis.mapBrush.setBounds(L.latLngBounds(vis.brushStart, vis.brushStart));
+    });
+    
+    vis.theMap.on('mousemove', function(e) {
+      if (!vis.brushMode || !vis.isBrushing || !vis.mapBrush) return;
+      const bounds = L.latLngBounds(vis.brushStart, e.latlng);
+      vis.mapBrush.setBounds(bounds);
+    });
+    
+    vis.theMap.on('mouseup', function(e) {
+      if (!vis.brushMode || !vis.isBrushing || !vis.mapBrush) return;
+      vis.isBrushing = false;
+    
+      const bounds = vis.mapBrush.getBounds();
+      vis.activeMapBrush = bounds;
+    
+      vis.triggerCombinedBrush();
+
+      // Hide the brush rectangle
+      vis.mapBrush.setStyle({ opacity: 0, fillOpacity: 0 });
     });
 
     vis.updateLegend();
@@ -319,8 +378,27 @@ class LeafletMap {
   }
 
   // Method to update the dataset to be used
-  updateData(data) {
-    this.data = data;
+  updateData(filteredData) {
+    this.data = filteredData;
     this.updateVis(); 
+  }
+
+  triggerCombinedBrush() {
+    const bounds = this.activeMapBrush;
+    const isMapBrushed = bounds && bounds.isValid();
+
+    const filtered = this.originalData.filter(d => {
+      const inMap = isMapBrushed
+        ? bounds.contains([d.latitude, d.longitude])
+        : true;
+
+      const inBar = typeof this.barChartFilter === "function"
+        ? this.barChartFilter(d)
+        : true;
+
+      return inMap && inBar;
+    });
+
+    handleBrushedData(filtered, "map");
   }
 }

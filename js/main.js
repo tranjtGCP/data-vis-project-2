@@ -111,14 +111,25 @@ function formatOffset(offset) {
 let barchart, leafletMap;
 
 // Method to update the visualizations after brushing
-function handleBrushedData(filteredData, source = null) {
-  barchart.updateData(filteredData);
-  leafletMap.updateData(filteredData);
-
-  // Optionally clear the brush from bar chart after interaction
+function handleBrushedData(filteredData, source) {
   if (source === "barchart") {
-    d3.select(".brush").call(barchart.brush.move, null);
+    leafletMap.barChartFilter = d => filteredData.includes(d);
   }
+
+  if (source === "map") {
+    barchart.mapFilter = d => filteredData.includes(d);
+  }
+
+  const fullData = window.earthquakeData;
+
+  const finalData = fullData.filter(d => {
+    const mapMatch = !leafletMap.barChartFilter || leafletMap.barChartFilter(d);
+    const barMatch = !barchart.mapFilter || barchart.mapFilter(d);
+    return mapMatch && barMatch;
+  });
+
+  leafletMap.updateData(finalData);
+  barchart.updateData(finalData);
 }
 
 d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'data/2024-2025.csv'
@@ -163,6 +174,8 @@ d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'da
       d.localTimezone = tzOffset.label;
     });
 
+    window.earthquakeData = data;
+
     // Initialize chart and then show it
     leafletMap = new LeafletMap({ parentElement: "#my-map" }, data);
     leafletMap.originalData = data;
@@ -184,9 +197,44 @@ d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'da
 
 // Handler for the brush reset button on the bar chart
 document.getElementById("reset-brush").addEventListener("click", () => {
-  handleBrushedData(barchart.originalData);  // show all quakes
-  d3.select(".brush").call(barchart.brush.move, null);  // clear brush
+  console.log("Reset bar chart brush clicked");
+
+  leafletMap.barChartFilter = null;
+  barchart.chart.select(".brush").call(barchart.brush.move, null);
+
+  recombineFilters();
 });
+
+// When the page refresh's, set the map mode back to pan
+document.addEventListener("DOMContentLoaded", () => {
+  const panRadio = document.querySelector('input[name="map-mode"][value="pan"]');
+  if (panRadio) {
+    panRadio.checked = true;
+  }
+});
+
+// Handler for the brush reset button for the map
+document.getElementById("reset-map-brush").addEventListener("click", () => {
+  console.log("Reset map brush clicked");
+
+  leafletMap.activeMapBrush = null;
+  leafletMap.mapBrush.setStyle({ opacity: 0, fillOpacity: 0 });
+
+  recombineFilters();
+});
+
+function recombineFilters() {
+  const fullData = window.earthquakeData;
+
+  const finalData = fullData.filter(d => {
+    const mapMatch = !leafletMap.activeMapBrush || leafletMap.activeMapBrush.contains([d.latitude, d.longitude]);
+    const barMatch = !leafletMap.barChartFilter || leafletMap.barChartFilter(d);
+    return mapMatch && barMatch;
+  });
+
+  leafletMap.updateData(finalData);
+  barchart.updateData(finalData);
+}
 
 // We use d3.timeParse() to convert a string into JS date object
 // Initialize helper function

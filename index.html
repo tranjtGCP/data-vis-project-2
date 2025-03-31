@@ -13,7 +13,14 @@
     </header>
 
     <div class="rowOne">
-        <div id="my-map"></div>
+        <div id="map-section">
+            <div id="map-controls">
+                <label><input type="radio" name="map-mode" value="pan" checked> Map Pan Mode</label>
+                <label><input type="radio" name="map-mode" value="brush"> Map Brush Mode</label>
+            </div>
+            <button id="reset-map-brush">Reset Map Brush</button>
+            <div id="my-map"></div>
+        </div>
         <svg id="chart"></svg>
     </div>
 

@@ -126,6 +126,8 @@ class Barchart {
         });
 
         handleBrushedData(brushedData, "barchart");
+
+        vis.chart.select(".brush").call(vis.brush.move, null);
       });
 
     vis.chart.append("g")

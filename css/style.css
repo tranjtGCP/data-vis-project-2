@@ -45,6 +45,27 @@ body {
   }
 }
 
+#map-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#map-controls {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#map-controls label,
+#map-controls button {
+  margin: 0 8px;
+}
+
+#reset-map-brush {
+  margin-bottom: 10px;
+}
+
 #tooltip {
   position: absolute;
   opacity: 0;
