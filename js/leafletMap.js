@@ -221,6 +221,24 @@ class LeafletMap {
       vis.mapBrush.setStyle({ opacity: 0, fillOpacity: 0 });
     });
 
+    // Default: scroll zoom enabled
+    let zoomLocked = false;
+
+    const lockBtn = document.getElementById("map-zoom-lock");
+    lockBtn.addEventListener("click", () => {
+      zoomLocked = !zoomLocked;
+
+      if (zoomLocked) {
+        vis.theMap.scrollWheelZoom.disable();
+        lockBtn.innerText = "🔒";
+        lockBtn.classList.add("locked");
+      } else {
+        vis.theMap.scrollWheelZoom.enable();
+        lockBtn.innerText = "🔓";
+        lockBtn.classList.remove("locked");
+      }
+    });
+
     vis.updateLegend();
 
     }

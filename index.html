@@ -17,8 +17,12 @@
             <div id="map-controls">
                 <label><input type="radio" name="map-mode" value="pan" checked> Map Pan Mode</label>
                 <label><input type="radio" name="map-mode" value="brush"> Map Brush Mode</label>
+                <button id="reset-map-brush">Reset Map Brush</button>
+                <div class="tooltip-wrapper">
+                    <button id="map-zoom-lock">🔓</button>
+                    <div class="tooltip-box">Toggle Scroll Zoom</div>
+                  </div>
             </div>
-            <button id="reset-map-brush">Reset Map Brush</button>
             <div id="my-map"></div>
         </div>
         <svg id="chart"></svg>
