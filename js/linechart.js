@@ -44,12 +44,7 @@ class LineChart {
     // X and Y domains
     // vis.xScale.domain(d3.extent(vis.data, d => d.date));
 
-    // Initialize axes
-    vis.xAxis = d3
-      .axisBottom(vis.xScale)
-      .ticks(d3.timeYear.every(1))
-      .tickFormat(d3.timeFormat("%Y"));
-
+    // Initialize y axes
     vis.yAxis = d3
       .axisLeft(vis.yScale)
       .ticks(10)
@@ -85,13 +80,6 @@ class LineChart {
 
     // We need to make sure that the tracking area is on top of other chart elements
     vis.marks = vis.chart.append('g');
-    vis.trackingArea = vis.chart.append('rect')
-        .attr('width', vis.width)
-        .attr('height', vis.height)
-        .attr('fill', 'none')
-        .attr('pointer-events', 'all');
-
-        //(event,d) => {
 
     // Empty tooltip group (hidden by default)
     vis.tooltip = vis.chart.append('g')
@@ -146,6 +134,44 @@ class LineChart {
     .attr("y", 30)
     .text("Number of Earthquakes");
 
+    // Add brush
+    vis.brush = d3.brushX()
+      .extent([[0, 0], [vis.width, vis.height]])
+      .on("end", function(event) {
+        if (vis.suppressBrush) return;
+      
+        const selection = event.selection;
+      
+        if (!selection) {
+          handleBrushedData(window.earthquakeData, "linechart");
+          return;
+        }
+      
+        const [x0, x1] = selection;
+        const startDate = vis.xScale.invert(x0);
+        const endDate = vis.xScale.invert(x1);
+      
+        const brushed = window.earthquakeData.filter(d => {
+          const time = new Date(d.localTime);
+          return time >= startDate && time <= endDate;
+        });
+      
+        // Save the filter function for recombination
+        vis.lineChartFilter = d => {
+          const time = new Date(d.localTime);
+          return time >= startDate && time <= endDate;
+        };
+      
+        // Clear brush rectangle visually
+        vis.chart.select(".brush").call(vis.brush.move, null);
+      
+        handleBrushedData(brushed, "linechart");
+      });
+
+    vis.chart.append("g")
+      .attr("class", "brush")
+      .call(vis.brush);
+
     // Draw the line chart
     this.updateVis();
   }
@@ -155,6 +181,24 @@ class LineChart {
    */
   updateVis() {
     let vis = this;
+
+    // Build the x axis ticks dynamically
+    const tickCount = 5;
+
+    vis.xAxis = d3.axisBottom(vis.xScale)
+      .ticks(tickCount)
+      .tickFormat(d => {
+        const range = vis.xScale.domain();
+        const totalDays = (range[1] - range[0]) / (1000 * 60 * 60 * 24);
+
+        if (totalDays < 120) {
+          return d3.timeFormat("%b %d, %Y")(d);
+        } else {
+          return d3.timeFormat("%b %Y")(d);
+        }
+      });
+
+    vis.xAxisG.call(vis.xAxis);
 
     vis.data.sort((a, b) => d3.ascending(a.date, b.date));
 
@@ -174,7 +218,7 @@ class LineChart {
 
     vis.bisectDate = d3.bisector(vis.xValue).center;
 
-    vis.trackingArea
+    vis.chart.select(".overlay")
     .on("mousemove", function(event) {
       const mouseX = d3.pointer(event)[0];
       const date = vis.xScale.invert(mouseX);
@@ -220,5 +264,20 @@ class LineChart {
     // Update the axes
     vis.xAxisG.call(vis.xAxis);
     vis.yAxisG.call(vis.yAxis);
+  }
+
+  // Method to update the data used after a brush is triggered
+  updateData(filtered) {
+    const countsByDate = d3.rollups(
+      filtered,
+      v => v.length,
+      d => d3.timeFormat("%Y-%m-%d")(new Date(d.localTime))
+    ).map(([dateStr, count]) => ({
+      date: new Date(dateStr),
+      value: count
+    }));
+  
+    this.data = countsByDate;
+    this.updateVis();
   }
 }

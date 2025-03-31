@@ -52,6 +52,13 @@ body {
   margin-bottom: 20px;
 }
 
+#linechart-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 #map-controls {
   margin-bottom: 10px;
   text-align: center;
@@ -64,6 +71,11 @@ body {
 
 #reset-map-brush {
   margin-bottom: 10px;
+}
+
+#reset-line-brush {
+  margin-bottom: 20px;
+  margin-top:5px;
 }
 
 #map-zoom-lock {

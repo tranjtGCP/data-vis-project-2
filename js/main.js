@@ -108,7 +108,7 @@ function formatOffset(offset) {
 }
 
 // Initialize bar chart and map objects
-let barchart, leafletMap;
+let barchart, leafletMap, lineChart;
 
 // Method to update the visualizations after brushing
 function handleBrushedData(filteredData, source) {
@@ -120,16 +120,26 @@ function handleBrushedData(filteredData, source) {
     barchart.mapFilter = d => filteredData.includes(d);
   }
 
+  if (source === "linechart") {
+    barchart.lineChartFilter = d => filteredData.includes(d);
+    leafletMap.lineChartFilter = d => filteredData.includes(d);
+  }
+
   const fullData = window.earthquakeData;
 
   const finalData = fullData.filter(d => {
-    const mapMatch = !leafletMap.barChartFilter || leafletMap.barChartFilter(d);
-    const barMatch = !barchart.mapFilter || barchart.mapFilter(d);
+    const mapMatch = (!leafletMap.barChartFilter || leafletMap.barChartFilter(d)) &&
+                     (!leafletMap.lineChartFilter || leafletMap.lineChartFilter(d));
+
+    const barMatch = (!barchart.mapFilter || barchart.mapFilter(d)) &&
+                     (!barchart.lineChartFilter || barchart.lineChartFilter(d));
+
     return mapMatch && barMatch;
   });
 
   leafletMap.updateData(finalData);
   barchart.updateData(finalData);
+  lineChart.updateData(finalData);
 }
 
 d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'data/2024-2025.csv'
@@ -212,8 +222,6 @@ d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'da
 
 // Handler for the brush reset button on the bar chart
 document.getElementById("reset-brush").addEventListener("click", () => {
-  console.log("Reset bar chart brush clicked");
-
   leafletMap.barChartFilter = null;
   barchart.chart.select(".brush").call(barchart.brush.move, null);
 
@@ -230,10 +238,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Handler for the brush reset button for the map
 document.getElementById("reset-map-brush").addEventListener("click", () => {
-  console.log("Reset map brush clicked");
-
   leafletMap.activeMapBrush = null;
   leafletMap.mapBrush.setStyle({ opacity: 0, fillOpacity: 0 });
+
+  recombineFilters();
+});
+
+// Handler for the brush reset button for the line chart
+document.getElementById("reset-line-brush").addEventListener("click", () => {
+  lineChart.lineChartFilter = null;
+  lineChart.chart.select(".brush").call(lineChart.brush.move, null);
 
   recombineFilters();
 });
@@ -244,9 +258,12 @@ function recombineFilters() {
   const finalData = fullData.filter(d => {
     const mapMatch = !leafletMap.activeMapBrush || leafletMap.activeMapBrush.contains([d.latitude, d.longitude]);
     const barMatch = !leafletMap.barChartFilter || leafletMap.barChartFilter(d);
-    return mapMatch && barMatch;
+    const inLine = !lineChart.lineChartFilter || lineChart.lineChartFilter(d);
+
+    return mapMatch && barMatch & inLine;
   });
 
   leafletMap.updateData(finalData);
   barchart.updateData(finalData);
+  lineChart.updateData(finalData);
 }
