@@ -192,6 +192,21 @@ d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'da
 
     // Show chart
     barchart.updateVis();
+
+    // Group by local date
+    const lineChartData = d3.rollups(
+      earthquakeData,
+      v => v.length,
+      d => d3.timeFormat("%Y-%m-%d")(new Date(d.localTime))
+    ).map(([dateStr, count]) => ({
+      date: new Date(dateStr),
+      value: count
+    }));
+
+    console.log(lineChartData);
+
+    // Initialize and render chart
+    lineChart = new LineChart({ parentElement: "#chart" }, lineChartData);
   })
   .catch((error) => console.error(error));
 
@@ -235,27 +250,3 @@ function recombineFilters() {
   leafletMap.updateData(finalData);
   barchart.updateData(finalData);
 }
-
-// We use d3.timeParse() to convert a string into JS date object
-// Initialize helper function
-const parseTime = d3.timeParse("%Y-%m-%d");
-
-let data, lineChart;
-
-/**
- * Load data from CSV file asynchronously and render line chart
- */
-d3.csv("data/2020-2025Processed.csv")
-  .then((_data) => {
-    _data.forEach((d) => {
-      d.value = parseFloat(d.Value);
-      d.date = new Date(d.Date); // Convert string to date object
-    });
-
-    data = _data;
-
-    // Initialize and render chart
-    lineChart = new LineChart({ parentElement: "#chart" }, data);
-    lineChart.updateVis();
-  })
-  .catch((error) => console.error(error));

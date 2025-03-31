@@ -145,6 +145,9 @@ class LineChart {
     .attr("x", -vis.config.containerHeight / 2)
     .attr("y", 30)
     .text("Number of Earthquakes");
+
+    // Draw the line chart
+    this.updateVis();
   }
 
   /**
@@ -152,6 +155,8 @@ class LineChart {
    */
   updateVis() {
     let vis = this;
+
+    vis.data.sort((a, b) => d3.ascending(a.date, b.date));
 
     vis.xValue = (d) => d.date;
     vis.yValue = (d) => d.value;
@@ -165,39 +170,34 @@ class LineChart {
 
     // Set the scale input domains
     vis.xScale.domain(d3.extent(vis.data, vis.xValue));
-    vis.yScale.domain(d3.extent(vis.data, vis.yValue));
+    vis.yScale.domain([0, d3.max(vis.data, vis.yValue)]).nice();
 
-    vis.bisectDate = d3.bisector(vis.xValue).left;
+    vis.bisectDate = d3.bisector(vis.xValue).center;
 
     vis.trackingArea
-      .on("mousemove", function(event) {
-        const mouseX = d3.pointer(event)[0];
-        const date = vis.xScale.invert(mouseX);
-        const i = vis.bisectDate(vis.data, date);
-        const d0 = vis.data[i - 1];
-        const d1 = vis.data[i];
-        const d = !d0 || !d1 ? d0 || d1 : (date - d0.date > d1.date - date ? d1 : d0);
-
-        const xPos = vis.xScale(d.date);
-        const yPos = vis.yScale(d.value);
-
-        vis.tooltip
-          .style("display", null)
-          .attr("transform", `translate(${xPos},${yPos})`);
-
-        vis.tooltip.select("circle")
-          .attr("fill", "gold") 
-          .attr("stroke", "black");
-
-        vis.tooltip.select(".tooltip-date")
-          .text(`Date: ${d3.timeFormat("%b %d, %Y")(d.date)}`);
-        
-        vis.tooltip.select(".tooltip-value")
-          .text(`Number of Earthquakes: ${d.value}`);
-      })
-      .on("mouseout", function() {
-        vis.tooltip.style("display", "none");
-      });
+    .on("mousemove", function(event) {
+      const mouseX = d3.pointer(event)[0];
+      const date = vis.xScale.invert(mouseX);
+      const i = vis.bisectDate(vis.data, date);
+      const d = vis.data[i];
+  
+      const xPos = vis.xScale(d.date);
+      const yPos = vis.yScale(d.value);
+  
+      vis.tooltip
+        .style("display", null)
+        .attr("transform", `translate(${xPos},${yPos})`);
+  
+      vis.tooltip.select("circle")
+        .attr("fill", "gold") 
+        .attr("stroke", "black");
+  
+      vis.tooltip.select(".tooltip-date")
+        .text(`Date: ${d3.timeFormat("%b %d, %Y")(d.date)}`);
+      
+      vis.tooltip.select(".tooltip-value")
+        .text(`Number of Earthquakes: ${d.value}`);
+    });
 
     vis.renderVis();
   }
