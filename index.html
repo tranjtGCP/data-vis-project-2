@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Interactive map with Leaflet</title>
+    <title>Exploring World Earthquakes</title>
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
     <link rel="stylesheet" href="css/leaflet.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <header>
         <h1>Exploring World Earthquakes</h1>
@@ -14,20 +16,28 @@
 
     <div class="rowOne">
         <div id="map-section">
+            <div id="my-map"></div>
             <div id="map-controls">
                 <label><input type="radio" name="map-mode" value="pan" checked> Map Pan Mode</label>
                 <label><input type="radio" name="map-mode" value="brush"> Map Brush Mode</label>
                 <button id="reset-map-brush">Reset Map Brush</button>
+                <label><input id="animate" type="checkbox" value="animate"> Animate Mode</label>
                 <div class="tooltip-wrapper">
                     <button id="map-zoom-lock">🔓</button>
                     <div class="tooltip-box">Toggle Scroll Zoom</div>
-                  </div>
+                </div>
+                <div id="animateControlsDiv" class="animateControls" style="visibility: hidden">
+                    <button id="step-backward">
+                        < Step backward</button>
+                            <button id="step-forward">Step forward ></button>
+                            <p id="currentView"></p>
+                            <p id="hint">Map starts as blank, step forward to view points</p>
+                </div>
             </div>
-            <div id="my-map"></div>
         </div>
         <div id="linechart-section">
-            <button id="reset-line-brush">Reset Time Brush</button>
             <svg id="chart"></svg>
+            <button id="reset-line-brush">Reset Time Brush</button>
         </div>
     </div>
 
@@ -35,16 +45,16 @@
         <div id="bar-dropdown-container">
             <label for="bar-metric">Bar Chart Data:</label>
             <select id="bar-metric">
-            <option value="magnitude" selected>Magnitude</option>
-            <option value="depth">Depth</option>
+                <option value="magnitude" selected>Magnitude</option>
+                <option value="depth">Depth</option>
             </select>
         </div>
         <div id="barchart-controls">
             <button id="reset-brush">Reset Brush</button>
-          </div>
+        </div>
         <svg id="barchart"></svg>
     </div>
-    
+
     <script src="js/d3.v6.min.js"></script>
     <script src="js/leaflet.js"></script>
 
@@ -56,4 +66,5 @@
     <div id="tooltip"></div>
 
 </body>
+
 </html>

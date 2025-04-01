@@ -129,10 +129,10 @@ function handleBrushedData(filteredData, source) {
 
   const finalData = fullData.filter(d => {
     const mapMatch = (!leafletMap.barChartFilter || leafletMap.barChartFilter(d)) &&
-                     (!leafletMap.lineChartFilter || leafletMap.lineChartFilter(d));
+      (!leafletMap.lineChartFilter || leafletMap.lineChartFilter(d));
 
     const barMatch = (!barchart.mapFilter || barchart.mapFilter(d)) &&
-                     (!barchart.lineChartFilter || barchart.lineChartFilter(d));
+      (!barchart.lineChartFilter || barchart.lineChartFilter(d));
 
     return mapMatch && barMatch;
   });
@@ -144,7 +144,7 @@ function handleBrushedData(filteredData, source) {
 
 d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'data/2024-2025.csv'
   .then((data) => {
-    console.log("number of items: " + data.length);
+    // console.log("number of items: " + data.length);
 
     // Filter data for any empty or invalid values
     data = data.filter(
@@ -207,13 +207,14 @@ d3.csv("data/2020-2025.csv") //**** TO DO  switch this to loading the quakes 'da
     const lineChartData = d3.rollups(
       earthquakeData,
       v => v.length,
-      d => d3.timeFormat("%Y-%m-%d")(new Date(d.localTime))
-    ).map(([dateStr, count]) => ({
-      date: new Date(dateStr),
-      value: count
-    }));
+      d => d3.timeFormat("%Y-%m-%d")(new Date(d.localTime)))
+      .map(([dateStr, count, place]) => ({
+        date: new Date(dateStr),
+        value: count,
+        place: place
+      }));
 
-    console.log(lineChartData);
+    // console.log(lineChartData);
 
     // Initialize and render chart
     lineChart = new LineChart({ parentElement: "#chart" }, lineChartData);
