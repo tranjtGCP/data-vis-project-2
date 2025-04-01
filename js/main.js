@@ -235,6 +235,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (panRadio) {
     panRadio.checked = true;
   }
+
+  document.getElementById("animate").checked = false;
 });
 
 // Handler for the brush reset button for the map
