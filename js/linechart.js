@@ -93,35 +93,31 @@ class LineChart {
       .attr("fill", "gold");
 
     // Background rectangle
-    vis.tooltip.append("rect")
+    vis.tooltip
+      .append("rect")
       .attr("class", "tooltip-bg")
       .attr("width", 160)
-      .attr("height", 60)
+      .attr("height", 40)
       .attr("fill", "white")
       .attr("stroke", "#ccc")
       .attr("rx", 4)
       .attr("ry", 4);
 
     // First line: date
-    vis.tooltip.append("text")
+    vis.tooltip
+      .append("text")
       .attr("class", "tooltip-date")
       .attr("x", 8)
       .attr("y", 16)
       .style("font-size", "12px")
       .style("fill", "#333");
 
-    vis.tooltip.append("text")
-      .attr("class", "tooltip-location")
-      .attr("x", 8)
-      .attr("y", 32)
-      .style("font-size", "12px")
-      .style("fill", "#333");
-
     // Second line: value
-    vis.tooltip.append("text")
+    vis.tooltip
+      .append("text")
       .attr("class", "tooltip-value")
       .attr("x", 8)
-      .attr("y", 48)
+      .attr("y", 32)
       .style("font-size", "12px")
       .style("fill", "#333");
 
@@ -246,9 +242,6 @@ class LineChart {
 
         vis.tooltip.select(".tooltip-date")
           .text(`Date: ${d3.timeFormat("%b %d, %Y")(d.date)}`);
-
-        vis.tooltip.select(".tooltip-location")
-          .text(`Location: ${(d.place)}`);
 
         vis.tooltip.select(".tooltip-value")
           .text(`Number of Earthquakes: ${d.value}`);
