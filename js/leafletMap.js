@@ -47,25 +47,26 @@ class LeafletMap {
       if (document.getElementById("animate").checked) {
         document.getElementById("animateControlsDiv").style.visibility = "visible";
         vis.data = [];
-        this.updateVis();
-
         vis.data.push(vis.minDate);
+        this.updateVis();
 
         vis.startTime = new Date(vis.minDate.time);
         vis.endTime = new Date(vis.currDate.time);
 
-        document.getElementById("currentView").innerHTML = "Currently viewing " + vis.startTime + " to " + vis.endTime;
+        document.getElementById("currentView").innerHTML = "Start Date: " + vis.startTime.getMonth() + "/" + vis.startTime.getDate() + "/" + vis.startTime.getFullYear();
+        document.getElementById("currentView2").innerHTML = "End Date: " + vis.endTime.getMonth() + "/" + vis.endTime.getDate() + "/" + vis.endTime.getFullYear();
 
         // Step backward click
         document.getElementById("step-backward").addEventListener("click", () => {
 
-          vis.endTime.setDate(vis.endTime.getDate() - 1);
-          vis.currDate.time = vis.endTime.setDate(vis.endTime.getDate() - 1);
+          document.getElementById("hint").style.visibility = "hidden";
 
-          console.log(vis.endTime);
+          vis.endTime.setDate(vis.endTime.getDate() - 1);
+          vis.currDate.time = vis.endTime.setDate(vis.endTime.getDate());
 
           if (vis.endTime < new Date(vis.minDate.time)) {
             vis.endTime.setDate(new Date(vis.minDate.time).getDate());
+            vis.currDate.time = vis.endTime.setDate(vis.endTime.getDate() + 1);
             document.getElementById("step-backward").disabled = true;
           }
           else {
@@ -79,7 +80,8 @@ class LeafletMap {
           });
 
           vis.data = timeframeToShow;
-          document.getElementById("currentView").innerHTML = "Currently viewing " + vis.startTime + " to " + vis.endTime;
+          document.getElementById("currentView").innerHTML = "Start Date: " + vis.startTime.getMonth() + "/" + vis.startTime.getDate() + "/" + vis.startTime.getFullYear();
+          document.getElementById("currentView2").innerHTML = "End Date: " + vis.endTime.getMonth() + "/" + vis.endTime.getDate() + "/" + vis.endTime.getFullYear();
           vis.updateVis();
         });
 
@@ -90,8 +92,6 @@ class LeafletMap {
 
           vis.endTime.setDate(vis.endTime.getDate() + 1);
           vis.currDate.time = vis.endTime.setDate(vis.endTime.getDate() + 1);
-
-          console.log(vis.endTime);
 
           if (vis.endTime >= new Date(vis.maxDate.time)) {
             vis.endTime.setDate(new Date(vis.maxDate.time).getDate());
@@ -108,16 +108,14 @@ class LeafletMap {
           });
 
           vis.data = timeframeToShow;
-          document.getElementById("currentView").innerHTML = "Currently viewing " + vis.startTime + " to " + vis.endTime;
+          document.getElementById("currentView").innerHTML = "Start Date: " + vis.startTime.getMonth() + "/" + vis.startTime.getDate() + "/" + vis.startTime.getFullYear();
+          document.getElementById("currentView2").innerHTML = "End Date: " + vis.endTime.getMonth() + "/" + vis.endTime.getDate() + "/" + vis.endTime.getFullYear();
           vis.updateVis();
         });
-
-        document.getElementById("currentView").innerHTML = "Currently viewing " + vis.startTime + " to " + vis.endTime;
       }
       else {
         document.getElementById("animateControlsDiv").style.visibility = "hidden";
         vis.data = this.originalFiltered;
-        vis.currDate = vis.minDate;
 
         this.updateVis();
       }

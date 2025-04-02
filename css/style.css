@@ -13,6 +13,10 @@ body {
     h1 {
       margin: 0;
     }
+
+    p {
+      margin: 0;
+    }
   }
 }
 
@@ -219,8 +223,6 @@ body {
   border-width: 10px;
   border-color: lightblue;
   filter: drop-shadow(10px 10px 5px gray);
-  padding: 12px;
-  margin: 40px auto;
 }
 
 .chart-title {
@@ -258,8 +260,18 @@ body {
   justify-content: center;
   align-items: center;
   height: max-content;
+  gap: 1rem;
 
   button {
     height: max-content;
+  }
+}
+
+.currentViewDiv {
+  display: flex;
+  flex-direction: column;
+
+  p {
+    margin: 0;
   }
 }
